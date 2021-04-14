@@ -1,0 +1,44 @@
+#!/bin/sh
+
+arch() {
+	base=${1%.c}
+	case ${base##*_} in
+		x11) echo x11;;
+		win32) echo win32;;
+		wl) echo wl;;
+	esac
+}
+
+{
+	echo '# Generated using make_deps'
+	printf '$(MAIN): '
+	for s in *.c; do
+		[ -z $(arch $s) ] && printf "${s%.c}.o "
+	done
+	for s in *.vert; do
+		printf "${s%.vert}.o "
+	done
+	echo
+	for s in *.c; do
+		printf "${s%.c}.o: $s "
+		awk '/^#include ".*"$/ { printf "%s ", substr($2, 2, length($2)-2); }' $s
+		echo
+	done
+	for s in *.vert; do
+		echo "${s%.vert}.o: $s ${s%.vert}.frag"
+	done
+	for a in x11 win32 wl; do
+		echo "ifeq (\$(ARCH), $a)"
+		printf '$(MAIN): '
+		for s in *_$a.c; do
+			printf "${s%.c}.o "
+		done
+		echo
+		for s in *_$a.c; do
+			printf "${s%.c}.o: $s "
+			awk '/^#include ".*"$/ { printf "%s ", substr($2, 2, length($2)-2); }' $s
+			echo
+		done
+		echo 'endif'
+	done
+} > deps.mk

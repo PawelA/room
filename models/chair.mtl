@@ -1,0 +1,10 @@
+# Exported from Wings 3D 2.2.5
+newmtl default
+Ns 20
+d 1.0
+illum 2
+Kd 0.5 0.4 0.2
+Ka 0.4 0.3 0
+Ks 0.17200000000000004 0.18049993849536927 0.19
+Ke 0.0 0.0 0.0
+
