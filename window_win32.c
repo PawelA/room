@@ -38,7 +38,7 @@ int window_init(void) {
     wc.lpszMenuName  = NULL;
     wc.lpszClassName = WINDOW_CLASS;
 	
-	return RegisterClass(&wc) ? 0 : -1;
+	return RegisterClass(&wc);
 }
 
 int window_create(int width, int height, int mode) {
@@ -48,7 +48,7 @@ int window_create(int width, int height, int mode) {
     hwnd = CreateWindow(WINDOW_CLASS, WINDOW_TITLE, WS_OVERLAPPEDWINDOW,
             0, 0, width, height, NULL, NULL, GetModuleHandle(NULL), NULL);
     if (!hwnd)
-		return -1;
+		return 0;
 
 	hdc = GetDC(hwnd);
 
@@ -61,10 +61,10 @@ int window_create(int width, int height, int mode) {
 
 	pf = ChoosePixelFormat(hdc, &pfd);
 	if (!pf)
-		return -1;
+		return 0;
 
 	if (!SetPixelFormat(hdc, pf, &pfd))
-		return -1;
+		return 0;
 
 	DescribePixelFormat(hdc, pf, sizeof(pfd), &pfd);
 	ReleaseDC(hwnd, hdc);
@@ -73,10 +73,10 @@ int window_create(int width, int height, int mode) {
 	hrc = wglCreateContext(hdc);
 	wglMakeCurrent(hdc, hrc);
 
-	return 0;
+	return 1;
 }
 
-void window_show(void) {
+void window_map(void) {
     ShowWindow(hwnd, SW_SHOW);
 }
 
@@ -89,11 +89,11 @@ void window_destroy(void) {
 
 
 void window_show_cursor(void) {
-	ShowCursor(1);
+	//ShowCursor(1);
 }
 
 void window_hide_cursor(void) {
-	ShowCursor(0);
+	//ShowCursor(0);
 }
 
 void window_get_cursor_pos(int *x, int *y) {
@@ -114,27 +114,40 @@ static LRESULT CALLBACK win_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lpar
     int key;
     
     evt = (struct window_evt *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
+	if (!evt)
+		return DefWindowProc(hwnd, msg, wparam, lparam);
+
     switch (msg) {
     case WM_KEYUP:
     case WM_KEYDOWN:
         if ((key = keys[HIWORD(lparam)])) {
             evt->key = key;
-            evt->type = (msg == WM_KEYDOWN ? WINDOW_KEY_PRESS : WINDOW_KEY_RELEASE);
+            evt->type = (msg == WM_KEYDOWN ? WINDOW_KEY_DOWN : WINDOW_KEY_UP);
         }
         break;
     case WM_LBUTTONUP:
         evt->button = BUTTON_LEFT;
-        evt->type = WINDOW_BUTTON_RELEASE;
+        evt->type = WINDOW_BUTTON_UP;
         break;
     case WM_LBUTTONDOWN:
         evt->button = BUTTON_LEFT;
-        evt->type = WINDOW_BUTTON_PRESS;
+        evt->type = WINDOW_BUTTON_DOWN;
         break;
     case WM_MOUSEMOVE:
         evt->x = LOWORD(lparam);
         evt->y = HIWORD(lparam);
-        evt->type = WINDOW_MOVE;
+        evt->type = WINDOW_MOUSE_MOVE;
         break;
+    case WM_SETFOCUS:
+    case WM_KILLFOCUS:
+		evt->focused = (msg == WM_SETFOCUS);
+		evt->type = WINDOW_FOCUS;
+		break;
+	case WM_SIZE:
+		evt->width = LOWORD(lparam);
+		evt->height = HIWORD(lparam);
+		evt->type = WINDOW_RESIZE;
+		break;
     case WM_CLOSE:
         evt->type = WINDOW_CLOSE;
         break;
@@ -155,5 +168,19 @@ int window_get_evt(struct window_evt *evt) {
             return 1;
     }
     return 0;
+}
+
+void window_trap_cursor(void) {
+	
+}
+
+void window_untrap_cursor(void) {
+	
+}
+
+void window_move_cursor(int x, int y) {
+	RECT rect;
+	GetClientRect(hwnd, &rect);
+	SetCursorPos(rect.left + x, rect.top + y);
 }
 

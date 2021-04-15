@@ -1,23 +1,10 @@
-#include <time.h>
-
-#define ONE_E9 1000000000
+#include "os.h"
 
 static long long last;
 static long long frame;
 
-static long long time_get(void) {
-	struct timespec ts;
-	clock_gettime(CLOCK_REALTIME, &ts);
-	return ts.tv_nsec + (long long) ONE_E9 * ts.tv_sec;
-}
-
-static void time_wait(long long t) {
-	struct timespec ts = {t / ONE_E9, t % ONE_E9};
-	nanosleep(&ts, NULL);
-}
-
 void fps_limit(int fps) {
-	frame = ONE_E9 / fps;
+	frame = 1000000000 / fps;
 	last = time_get();
 }
 

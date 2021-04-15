@@ -187,8 +187,8 @@ int main(void) {
 	depth_shader_id = SHADER_COMPILE(depth);
 	u_depth_model_mat = SHADER_UNIFORM(u_model_mat);
 	u_depth_view_persp_mat = SHADER_UNIFORM(u_view_persp_mat);
-	window_map();
 
+	window_map();
 	model_load(&room, "models/room");
 	model_load(&lamp, "models/lamp");
 	model_load(&bulb, "models/bulb");
@@ -209,6 +209,7 @@ int main(void) {
 	m4_translate(chair_model_mat, -1.2, 0.8, -1);
 
 	fps_limit(60);
+
 	while (1) {
 		glUseProgram(depth_shader_id);
 		glViewport(0, 0, sh_map.width, sh_map.height);
